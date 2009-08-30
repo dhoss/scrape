@@ -6,9 +6,9 @@ use URI;
 use Data::Dumper;
 
 my $want = scraper {
-    process "ul.listings", "contractors[]" => scraper { 
+    process "li.gold", "contractors[]" => scraper { 
         process ".omnitureListingNameLink",   name    => 'TEXT';
-        process ".address", addy => 'TEXT'; # need to split this up into address, state, postcode,
+        process ".address", address => 'TEXT'; # need to split this up into address, state, postcode,
         process ".phoneNumber",               phone   => 'TEXT';
         process ".links",                     website => 'TEXT';        
     };
