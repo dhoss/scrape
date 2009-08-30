@@ -6,7 +6,14 @@ use URI;
 use Data::Dumper;
 
 my $want = scraper {
-    process "a.omnitureListingNameLink", "names[]" => { name => "TEXT" }
+    process "div.listingName", "contractors[]" => scraper { 
+        process ".omnitureListingNameLink",   name    => 'TEXT';
+        process ".gold",                   address => scraper {
+            process ".address", addy => 'TEXT'; # need to split this up into address, state, postcode,
+        };
+        process ".phoneNumber",               phone   => 'TEXT';
+        process ".links",                     website => 'TEXT';        
+    };
 };
 
 my $names = $want->scrape( 
