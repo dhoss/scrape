@@ -17,9 +17,8 @@ my $start_url =  WWW::Mechanize::Link->new( { url =>'http://yellowpages.com.au/s
 
 ### Get Set
 my $mech = WWW::Mechanize->new;
-my @information;
 my @letters = (0, 'a' .. 'z');
-open my $OUT, ">", "full.yml";
+unlink "full.yml";
 
 
 ### GO!
@@ -46,10 +45,10 @@ foreach my $l (@letters) {
 
         # bailout condition
         undef $base_url  if (!@gold && !@free && !@nearly_free); # nothing on this or subsequent pages for this loop.
-
-        push @information, (@gold, @free, @nearly_free);
+        my @information = (@gold, @free, @nearly_free);
+        open my $OUT, ">>", "full.yml";
         print $OUT Dump(@information);
-
+        close $OUT;
     }
 }
 
