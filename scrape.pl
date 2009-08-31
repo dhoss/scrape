@@ -8,20 +8,20 @@ use WWW::Mechanize;
 use URI::Query;
 use URI::Escape;
 use IO::File;
+use Smart::Comments;
 
-#my $redirect_url = WWW::Mechanize->new;
 my $yaml;
 my $base_url = "http://yellowpages.com.au/search/postSearchEntry.do?clueType=0&clue=electrical+contractors&locationClue=All+States&x=0&y=0";
 my $mech = WWW::Mechanize->new;
-print "mech object initiated\n";
+### mech object initiated
 $mech->get( $base_url );
-print "got our url\n";
+### got our url
 my $names;
 my @information;
-print "Entering link following loop\n";
+### Entering link following loop
  
 while ( $mech->follow_link( text_regex => qr/^next$/i) ) {
-    print "Beginning scrape inside loop\n";
+    ### Beginning scrape inside loop
    
      my $want = scraper {
         process "li.gold", "contractors[]" => scraper { 
@@ -33,23 +33,23 @@ while ( $mech->follow_link( text_regex => qr/^next$/i) ) {
     };
  
     my $ua = $want->user_agent;
-    print "Before scrape is called\n";
+    ### Before scrape is called
     $names = $want->scrape( 
         URI->new($base_url) 
     );
  
     my $site = $names->{contractors}[3]->{website};
-    print "Site is: $site\n";
+    ### Site is: $site
    
     my $true_url      = URI->new($site);
     my $query = URI::Query->new($true_url->query);
     my $site_from_query = uri_unescape($query->hash_arrayref->{webSite}->[0]); 
     push @information, { contractor => $names, real_website => $site_from_query };
     
-    print "Saving page info...\n";
-    print "Scrape successful\n";
-    print "Serializing -> YAML\n";
-    print "Dumping info:\n";
+    ### Saving page info...
+    ### Scrape successful
+    ### Serializing -> YAML
+    ### Dumping info
     print Dump(@information);
     $| = 1;   
     my $fh = IO::File->new;
@@ -69,9 +69,9 @@ while ( $mech->follow_link( text_regex => qr/^next$/i) ) {
     $fh->close;
     undef $fh;
 
-    warn "Page: $base_url\n";
-    print "Sleep for a bit\n";
+    ### Page: $base_url
+    ### Sleep for a bit
     sleep(1);
 }
  
-print "All done!\n";
+### All done!
