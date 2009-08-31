@@ -13,7 +13,7 @@ print "mech object initiated\n";
 $mech->get( $base_url );
 print "got our url\n";
 my $names;
-
+my @information;
 print "Entering link following loop\n";
 while ( $mech->follow_link( text => "Next" ) ) {
     print "Beginning scrape inside loop\n";
@@ -30,8 +30,14 @@ while ( $mech->follow_link( text => "Next" ) ) {
     $names = $want->scrape( 
         URI->new($base_url) 
     );
+    push @information, { contractor => $names };
+    print "Saving page info...\n";
     print "Scrape successful\n";
+    print "Dumping info:\n";
+    print Dumper(@information);
+    warn "Page: $base_url\n";
+    print "Sleep for a bit\n";
+    sleep(1);
 }
 
-print Dumper($names);
-
+print "All done!\n";
