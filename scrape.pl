@@ -6,6 +6,7 @@ use URI;
 use YAML qw/ Dump /;
 use WWW::Mechanize;
 
+#my $redirect_url = WWW::Mechanize->new;
 my $yaml;
 my $base_url = "http://yellowpages.com.au/search/postSearchEntry.do?clueType=0&clue=electrical+contractors&locationClue=All+States&x=0&y=0";
 my $mech = WWW::Mechanize->new;
@@ -33,11 +34,17 @@ while ( $mech->follow_link( text => "Next" ) ) {
     $names = $want->scrape( 
         URI->new($base_url) 
     );
-    
-    my $redirect    = $names->{website};
-    my $true_site   = grep /Location:(\w+)/, $redirect;
-    $true_site      = $1; 
-    push @information, { contractor => $names  };
+
+    my $site = $names->{contractors}[3]->{website};
+    print "Site is: $site\n";
+    my $data = `curl -I $site`; 
+    my ($url) = $data =~ /.*?Location: (.*?)$/ms;  
+#    my $r           = $mech->get($names->{website});
+#    my $headers     = grep /"Location:"/i, $r->dump_headers;
+#    my $true_site   = $headers =~ /Location:(\w+)/;
+
+    my $true_url      = $1; 
+    push @information, { contractor => $names, website => $true_url  };
     
     print "Saving page info...\n";
     print "Scrape successful\n";
