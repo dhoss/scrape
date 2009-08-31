@@ -20,7 +20,7 @@ my $names;
 my @information;
 print "Entering link following loop\n";
  
-while ( $mech->follow_link( text => "Next" ) ) {
+while ( $mech->follow_link( text_regex => qr/^next$/i) ) {
     print "Beginning scrape inside loop\n";
    
      my $want = scraper {
