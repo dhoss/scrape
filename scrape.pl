@@ -7,7 +7,8 @@ use YAML qw/ Dump /;
 use WWW::Mechanize;
 use URI::Query;
 use URI::Escape;
- 
+use IO::File;
+
 #my $redirect_url = WWW::Mechanize->new;
 my $yaml;
 my $base_url = "http://yellowpages.com.au/search/postSearchEntry.do?clueType=0&clue=electrical+contractors&locationClue=All+States&x=0&y=0";
@@ -50,6 +51,24 @@ while ( $mech->follow_link( text => "Next" ) ) {
     print "Serializing -> YAML\n";
     print "Dumping info:\n";
     print Dump(@information);
+   
+    my $fh = IO::File->new;
+    # dump our YAML to a file    
+    my $file_name = $names->{contractors}[0]->{name};
+    $file_name    = lc $file_name;
+    $file_name    =~ s/\s/_/g;
+    if ( $fh->open("> $file_name.yaml") ) {
+        print $fh Dump(@information);
+    }
+    $fh->close;
+
+    # dump the entire page
+    if ( $fh->open("> $file_name.html") ) {
+        print $fh $mech->content;
+    }
+    $fh->close;
+    undef $fh;
+
     warn "Page: $base_url\n";
     print "Sleep for a bit\n";
     sleep(1);
