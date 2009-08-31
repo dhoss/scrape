@@ -3,7 +3,6 @@ use warnings;
 use strict;
 use Web::Scraper;
 use URI;
-use Data::Dumper;
 use YAML qw/ Dump /;
 use WWW::Mechanize;
 
