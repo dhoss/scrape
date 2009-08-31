@@ -24,42 +24,22 @@ foreach my $l (@letters) {
     $base_url =~ s/__HERE__/$l/;
     my $page = 1;
     ### Letter: $l
-    ### GO!!!
 
-    while ($base_url) { ### Scraping
+    while ($base_url) {
         $mech->get($base_url);
         $base_url = "http://yellowpages.com.au" . $mech->find_link( text_regex => qr/^next$/i)->url;
         $page++;
         ### Page: $page
-        my $want = scraper {
-            process "li.gold", "contractors[]" => scraper { 
-                process ".omnitureListingNameLink",   name    => 'TEXT';
-                process ".address", address => 'TEXT'; # need to split this up into address, state, postcode,
-                process ".phoneNumber",               phone   => 'TEXT';
-                process ".links",                     website => '@href';        
-            };
-        };
- 
-        my $ua = $want->user_agent;
-        ### Before scrape is called
 
-        $names = $want->scrape( 
-            URI->new($base_url) 
-        );
- 
-        my $site = $names->{contractors}[3]->{website};
-        ### Site is: $site
-        
-        my $true_url      = URI->new($site);
-        my $query = URI::Query->new($true_url->query);
-        my $site_from_query = uri_unescape($query->hash_arrayref->{webSite}->[0]); 
-        push @information, { contractor => $names, real_website => $site_from_query };
-    
-        ### Saving page info...
-        ### Scrape successful
-        ### Serializing -> YAML
-        ### Dumping info
+        # ARGH.  Actually we want classes: li.gold li.free and li.almostFree
+        my @gold        = scrape_some('gold', $mech);
+        my @free        = scrape_some('free', $mech);
+        my @nearly_free = scrape_some('almostFree', $mech);
+        undef $base_url  if (!@gold && !@free && !@nearly_free); # nothing on this or subsequent pages for this loop.
+        push @information, (@gold, @free, @nearly_free);
         print Dump(@information);
+
+
         $| = 1;   
         my $fh = IO::File->new;
         # dump our YAML to a file    
@@ -89,3 +69,33 @@ foreach my $l (@letters) {
 }
 
 ### All done!
+
+sub scrape_some {
+    my ( $list_type, $mech ) = @_;
+    my @contractors; # return value
+    my $want = scraper {
+        process "li.$list_type" , "contractors[]" => scraper { 
+            process ".omnitureListingNameLink",   name    => 'TEXT';
+            process ".address", address => 'TEXT'; # need to split this up into address, state, postcode,
+            process ".phoneNumber",               phone   => 'TEXT';
+            process ".links",                     website => '@href';
+        };
+    };
+    my $ua = $want->user_agent;
+    ### Before scrape is called
+    my $names = $want->scrape( $mech->content, $mech->uri);
+    my @ppl = @{$names->{contractors}};
+
+    foreach my $p (@ppl) {
+        if (exists $p->{website}) {
+            my $site = $p->{website};
+            my $true_url      = URI->new($site);
+            my $query = URI::Query->new($true_url->query);
+            my $site_from_query = uri_unescape($query->hash_arrayref->{webSite}->[0]);
+            $p->{website} = $site_from_query;
+        }
+        $p->{type} = $list_type;
+        push @contractors, @ppl;
+    }
+    return @contractors;
+}
