@@ -51,7 +51,7 @@ while ( $mech->follow_link( text => "Next" ) ) {
     print "Serializing -> YAML\n";
     print "Dumping info:\n";
     print Dump(@information);
-   
+    $| = 1;   
     my $fh = IO::File->new;
     # dump our YAML to a file    
     my $file_name = $names->{contractors}[0]->{name};
