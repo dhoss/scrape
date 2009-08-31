@@ -33,8 +33,11 @@ while ( $mech->follow_link( text => "Next" ) ) {
     $names = $want->scrape( 
         URI->new($base_url) 
     );
-       
-    push @information, { contractor => $names };
+    
+    my $redirect    = $names->{website};
+    my $true_site   = grep /Location:(\w+)/, $redirect;
+    $true_site      = $1; 
+    push @information, { contractor => $names  };
     
     print "Saving page info...\n";
     print "Scrape successful\n";
