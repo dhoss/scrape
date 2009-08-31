@@ -5,6 +5,8 @@ use Web::Scraper;
 use URI;
 use YAML qw/ Dump /;
 use WWW::Mechanize;
+use URI::Query;
+use URI::Escape;
 
 #my $redirect_url = WWW::Mechanize->new;
 my $yaml;
@@ -37,10 +39,13 @@ while ( $mech->follow_link( text => "Next" ) ) {
 
     my $site = $names->{contractors}[3]->{website};
     print "Site is: $site\n";
-   
+    my $new_uri = URI->new($site);
+    my $query = URI::Query->new($new_uri->query);
+    my $raw_site = uri_unescape($query->hash_arrayref->{webSite}->[0]);
    # my $true_url      = $1; 
-    push @information, { contractor => $names };
-    
+    push @information, { contractor => $names};
+    $names->{contractors}[3]->{website} = $raw_site;
+        
     print "Saving page info...\n";
     print "Scrape successful\n";
     print "Serializing -> YAML\n";
