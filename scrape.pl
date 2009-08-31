@@ -1,71 +1,56 @@
 #!/usr/bin/env perl
+use Smart::Comments;
 use warnings;
 use strict;
 use Web::Scraper;
 use URI;
 use YAML qw/ Dump /;
 use WWW::Mechanize;
+use WWW::Mechanize::Link;
 use URI::Query;
 use URI::Escape;
 use IO::File;
-use Smart::Comments;
 
+### On your marks
 my $yaml;
-my $start_url =  'http://yellowpages.com.au/search/listingsSearch.do?region=australia&ul.street=&headingCode=22683&sortByAlphabetical=true&rankType=1&webLink=false&userState=select+---%3E&sortByDistance=false&locationForSortBySelected=false&locationText=All+States&adPs=&adPs=&adPs=&adPs=&adPs=&ul.streetNumber=&sortByDetail=false&ul.suburb=&businessType=Electrical+contractors&sortByClosestMatch=false&sortBy=alpha&rankWithTolls=true&stateId=9&safeLocationClue=All+States&__HERE__&locationClue=All+States&serviceArea=true&suburbPostcode=';
+my $start_url =  WWW::Mechanize::Link->new( { url =>'http://yellowpages.com.au/search/listingsSearch.do?region=australia&ul.street=&headingCode=22683&sortByAlphabetical=true&rankType=1&webLink=false&userState=select+---%3E&sortByDistance=false&locationForSortBySelected=false&locationText=All+States&adPs=&adPs=&adPs=&adPs=&adPs=&ul.streetNumber=&sortByDetail=false&ul.suburb=&businessType=Electrical+contractors&sortByClosestMatch=false&sortBy=alpha&rankWithTolls=true&stateId=9&safeLocationClue=All+States&__HERE__&locationClue=All+States&serviceArea=true&suburbPostcode='});
+
+### Get Set
 my $mech = WWW::Mechanize->new;
-### mech object initiated
-### got our url
-my $names;
 my @information;
-### Entering link following loop
-my @letters = ('a' .. 'z', 0);
+my @letters = (0, 'a' .. 'z');
+open my $OUT, ">", "full.yml";
+
+
+### GO!
 foreach my $l (@letters) {
-    my $base_url = $start_url;
-    $base_url =~ s/__HERE__/$l/;
+    my $base_url = $start_url->url;
+    $base_url =~ s/__HERE__/currentLetter=$l/;
     my $page = 1;
     ### Letter: $l
 
     while ($base_url) {
-        $mech->get($base_url);
-        $base_url = "http://yellowpages.com.au" . $mech->find_link( text_regex => qr/^next$/i)->url;
-        $page++;
         ### Page: $page
+        $mech->get($base_url);
+        my $next = $mech->find_link( text_regex => qr/^Next$/i);
+
+        # Bailout
+        $base_url = $next ? $next : undef;
+
+        $page++;
 
         # ARGH.  Actually we want classes: li.gold li.free and li.almostFree
         my @gold        = scrape_some('gold', $mech);
         my @free        = scrape_some('free', $mech);
         my @nearly_free = scrape_some('almostFree', $mech);
+
+        # bailout condition
         undef $base_url  if (!@gold && !@free && !@nearly_free); # nothing on this or subsequent pages for this loop.
+
         push @information, (@gold, @free, @nearly_free);
-        print Dump(@information);
+        print $OUT Dump(@information);
 
-
-        $| = 1;   
-        my $fh = IO::File->new;
-        # dump our YAML to a file    
-        my $file_name = $names->{contractors}[0]->{name};
-        $file_name    = lc $file_name;
-        $file_name    =~ s/\s/_/g;
-        if ( $fh->open("> $file_name.yaml") ) {
-            print $fh Dump(@information);
-        }
-        $fh->close;
-
-        # dump the entire page
-        if ( $fh->open("> $file_name.html") ) {
-            print $fh $mech->content;
-        }
-        $fh->close;
-        undef $fh;
-
-        ### Page: $base_url
-        ### Sleep for a bit
-        sleep(1);
-        last if $page == 3; # debug
-        ### Letter: $l
     }
-    last if $page == 3; # debug
-    ### 5bailing on page $page
 }
 
 ### All done!
@@ -82,9 +67,9 @@ sub scrape_some {
         };
     };
     my $ua = $want->user_agent;
-    ### Before scrape is called
     my $names = $want->scrape( $mech->content, $mech->uri);
-    my @ppl = @{$names->{contractors}};
+    my @ppl = ();
+    @ppl = @{$names->{contractors}} if $names->{contractors};
 
     foreach my $p (@ppl) {
         if (exists $p->{website}) {
