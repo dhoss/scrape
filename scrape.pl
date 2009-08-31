@@ -24,15 +24,16 @@ while ( $mech->follow_link( text => "Next" ) ) {
             process ".omnitureListingNameLink",   name    => 'TEXT';
             process ".address", address => 'TEXT'; # need to split this up into address, state, postcode,
             process ".phoneNumber",               phone   => 'TEXT';
-            process ".links",                     website => 'TEXT';        
+            process ".links",                     website => '@href';        
         };
     };
 
+    my $ua = $want->user_agent;
     print "Before scrape is called\n";
     $names = $want->scrape( 
         URI->new($base_url) 
     );
-    
+       
     push @information, { contractor => $names };
     
     print "Saving page info...\n";
