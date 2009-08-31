@@ -72,6 +72,7 @@ while ( $mech->follow_link( text_regex => qr/^next$/i) ) {
     ### Page: $base_url
     ### Sleep for a bit
     sleep(1);
+     last; # debug
 }
  
 ### All done!
