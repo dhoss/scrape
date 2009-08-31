@@ -37,14 +37,9 @@ while ( $mech->follow_link( text => "Next" ) ) {
 
     my $site = $names->{contractors}[3]->{website};
     print "Site is: $site\n";
-    my $data = `curl -I $site`; 
-    my ($url) = $data =~ /.*?Location: (.*?)$/ms;  
-#    my $r           = $mech->get($names->{website});
-#    my $headers     = grep /"Location:"/i, $r->dump_headers;
-#    my $true_site   = $headers =~ /Location:(\w+)/;
-
-    my $true_url      = $1; 
-    push @information, { contractor => $names, website => $true_url  };
+   
+   # my $true_url      = $1; 
+    push @information, { contractor => $names };
     
     print "Saving page info...\n";
     print "Scrape successful\n";
